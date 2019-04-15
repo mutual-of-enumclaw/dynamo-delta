@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "preserveConstEnums": false,
+    "strictNullChecks": false,
+    "sourceMap": true,
+    "target": "es6",
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "module":"commonjs",
+    "lib": ["esnext"],
+    "rootDir": "./"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
