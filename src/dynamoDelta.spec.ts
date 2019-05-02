@@ -142,7 +142,7 @@ describe('generateDeltaUpdate', () => {
         delete after.number;
         const before = generateTestData();
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #number = :0');
+        expect(result.UpdateExpression).toBe('remove #number');
         expect(result.ConditionExpression).toBe('#number = :0Old');
         expect(result.ExpressionAttributeValues[':0']).toBe(undefined);
         expect(result.ExpressionAttributeValues[':0Old']).toBe(before.number);
@@ -164,7 +164,7 @@ describe('generateDeltaUpdate', () => {
         delete after.map;
         const before = generateTestData();
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #map = :0');
+        expect(result.UpdateExpression).toBe('remove #map');
         expect(result.ConditionExpression).toBe('#map = :0Old');
         expect(result.ExpressionAttributeValues[':0']).toBe(undefined);
         expect(result.ExpressionAttributeValues[':0Old']).toMatchObject(before.map);
@@ -186,7 +186,7 @@ describe('generateDeltaUpdate', () => {
         const before = generateTestData();
         before.arrayString.push('Test 3');
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #arrayString[2] = :0');
+        expect(result.UpdateExpression).toBe('remove #arrayString[2]');
         expect(result.ConditionExpression).toBe('#arrayString[2] = :0Old');
         expect(result.ExpressionAttributeValues[':0']).toBe(undefined);
         expect(result.ExpressionAttributeValues[':0Old']).toBe(before.arrayString[2]);
@@ -212,6 +212,35 @@ describe('generateDeltaUpdate', () => {
         expect(result.ConditionExpression).toBe('#date = :0Old');
         expect(result.ExpressionAttributeValues[':0']).toBe(after.date);
         expect(result.ExpressionAttributeValues[':0Old']).toBe(before.date);
+    });
+
+    test('Data removes existing element', () => {
+        const after = generateTestData();
+        const before = generateTestData();
+        before.val = [{test: 'test1'}, {test: 'test2', number: 2}];
+        after.val = undefined;
+
+        const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
+        expect(result.UpdateExpression).toBe('remove #val');
+        expect(result.ConditionExpression).toBe('#val = :0Old');
+        expect(result.ExpressionAttributeValues[':0']).toBeUndefined();
+        expect(result.ExpressionAttributeValues[':0Old']).toBe(before.val);
+    });
+
+    test('Data changes and removes existing element', () => {
+        const after = generateTestData();
+        const before = generateTestData();
+        before.val = [{test: 'test1'}, {test: 'test2', number: 2}];
+        after.val = undefined;
+        after.number = 2;
+
+        const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
+        expect(result.UpdateExpression).toBe('set #number = :0 remove #val');
+        expect(result.ConditionExpression).toBe('#number = :0Old AND #val = :1Old');
+        expect(result.ExpressionAttributeValues[':0']).toBe(2);
+        expect(result.ExpressionAttributeValues[':1']).toBeUndefined();
+        expect(result.ExpressionAttributeValues[':0Old']).toBe(before.number);
+        expect(result.ExpressionAttributeValues[':1Old']).toBe(before.val);
     });
 });
 

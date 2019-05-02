@@ -23,23 +23,43 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     DynamoDB.DocumentClient.UpdateItemInput {
     const updates = generateUpdates(before, after);
 
-    let updateExpression = '';
+    let setExpression = '';
+    let removeExpression = '';
     let conditionExpression = '';
     const expressionValues = {};
     const expressionNames = {};
-
     for(let i = 0; i < updates.length; i++) {
         const update = updates[i];
-        if(i !== 0) {
-            updateExpression += ', ';
-            conditionExpression += ' AND ';
+        const path = `#${update.path.split('.').join('.#')}`;
+
+        
+        if(update.afterValue === null || update.afterValue === undefined) {
+            //
+            // Add to remove expressions
+            //
+            if(removeExpression.length !== 0) {
+                removeExpression += ', ';
+            }
+
+            removeExpression += path;
+        } else {
+            //
+            // Add to set expressions
+            //
+            if(setExpression.length !== 0) {
+                setExpression += ', ';
+            }
+    
+            setExpression += `${path} = :${i}`;
+            expressionValues[':' + i] = update.afterValue;
         }
 
-
-        const path = `#${update.path.split('.').join('.#')}`;
-        updateExpression += `${path} = :${i}`;
-        expressionValues[':' + i] = update.afterValue;
-        
+        //
+        // Condition
+        //
+        if(conditionExpression.length !== 0) {
+            conditionExpression += ' AND ';
+        }
         if(update.beforeValue !== undefined) {
             conditionExpression += `${path} = :${i}Old`;
             expressionValues[`:${i}Old`] = update.beforeValue;
@@ -47,16 +67,31 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             conditionExpression += `attribute_not_exists(${path})`;
         }
 
+        //
+        // Add parts to expression name
+        //
         update.path.split('.').forEach(part => {
             expressionNames['#' + part] = part;
         });
+    }
+
+    let updateExpression = '';
+    if(setExpression.length > 0) {
+        updateExpression = 'set ' + setExpression;
+    }
+    if(removeExpression.length > 0) {
+        if(updateExpression.length > 0) {
+            updateExpression += ' ';
+        }
+
+        updateExpression += 'remove ' + removeExpression;
     }
 
     if(updateExpression) {
         return {
             TableName: tableName,
             Key: key,
-            UpdateExpression: 'set ' + updateExpression,
+            UpdateExpression: updateExpression,
             ConditionExpression: conditionExpression,
             ExpressionAttributeValues: expressionValues,
             ExpressionAttributeNames: expressionNames
