@@ -131,7 +131,7 @@ describe('generateDeltaUpdate', () => {
         const before = generateTestData();
         delete before.number;
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #number = :0');
+        expect(result.UpdateExpression).toBe('add #number = :0');
         expect(result.ConditionExpression).toBe('attribute_not_exists(#number)');
         expect(result.ExpressionAttributeValues[':0']).toBe(after.number);
         expect(result.ExpressionAttributeValues[':0Old']).toBeUndefined();
@@ -153,7 +153,7 @@ describe('generateDeltaUpdate', () => {
         const before = generateTestData();
         delete before.map;
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #map = :0');
+        expect(result.UpdateExpression).toBe('add #map = :0');
         expect(result.ConditionExpression).toBe('attribute_not_exists(#map)');
         expect(result.ExpressionAttributeValues[':0']).toMatchObject(after.map);
         expect(result.ExpressionAttributeValues[':0Old']).toBeUndefined();
@@ -175,7 +175,7 @@ describe('generateDeltaUpdate', () => {
         after.arrayString.push('Test 3');
         const before = generateTestData();
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #arrayString[2] = :0');
+        expect(result.UpdateExpression).toBe('add #arrayString[2] = :0');
         expect(result.ConditionExpression).toBe('attribute_not_exists(#arrayString[2])');
         expect(result.ExpressionAttributeValues[':0']).toBe(after.arrayString[2]);
         expect(result.ExpressionAttributeValues[':0Old']).toBeUndefined();
@@ -208,7 +208,7 @@ describe('generateDeltaUpdate', () => {
         const before = generateTestData();
         before.date = null;
         const result = generateDeltaUpdate('test', { Key: 'test'}, before , after);
-        expect(result.UpdateExpression).toBe('set #date = :0');
+        expect(result.UpdateExpression).toBe('add #date = :0');
         expect(result.ConditionExpression).toBe('#date = :0Old');
         expect(result.ExpressionAttributeValues[':0']).toBe(after.date);
         expect(result.ExpressionAttributeValues[':0Old']).toBe(before.date);

@@ -24,6 +24,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     const updates = generateUpdates(before, after);
 
     let setExpression = '';
+    let addExpression = '';
     let removeExpression = '';
     let conditionExpression = '';
     const expressionValues = {};
@@ -42,6 +43,16 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             }
 
             removeExpression += path;
+        } else if(!update.beforeValue && update.afterValue) {
+            //
+            // Add to set expressions
+            //
+            if(addExpression.length !== 0) {
+                addExpression += ', ';
+            }
+    
+            addExpression += `${path} = :${i}`;
+            expressionValues[':' + i] = update.afterValue;
         } else {
             //
             // Add to set expressions
@@ -78,6 +89,12 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     let updateExpression = '';
     if(setExpression.length > 0) {
         updateExpression = 'set ' + setExpression;
+    }
+    if(addExpression.length > 0) {
+        if(updateExpression.length > 0) {
+            updateExpression += ' ';
+        }
+        updateExpression = 'add ' + addExpression;
     }
     if(removeExpression.length > 0) {
         if(updateExpression.length > 0) {
