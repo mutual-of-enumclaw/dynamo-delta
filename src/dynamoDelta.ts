@@ -71,7 +71,9 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
         // Add parts to expression name
         //
         update.path.split('.').forEach(part => {
-            expressionNames['#' + part] = part;
+            const arrayIndex = part.indexOf('[');
+            const subPart = (arrayIndex < 0)? part : part.substr(0, arrayIndex);
+            expressionNames['#' + subPart] = subPart;
         });
     }
 
@@ -116,7 +118,8 @@ function generateUpdates<T>(before: T, after: T, path: string = '', isArray: boo
     for(const i in fields) {
         const field = fields[i];
         const afterValue = after[field];
-        const beforeValue = before[field];
+        let beforeValue = before[field];
+
         if(afterValue === null && beforeValue === null) {
             // Do nothing, they match
         } else if(afterValue === null || beforeValue === null) {
@@ -154,7 +157,13 @@ function generateUpdates<T>(before: T, after: T, path: string = '', isArray: boo
                         }
                     }
                     else if(Array.isArray(afterValue)) {
-                        retval.push(...generateUpdates(beforeValue, afterValue, relativePath, true));
+                        if(beforeValue.length === 0 && afterValue.length === 0) {
+                            // Do nothing
+                        } else if(beforeValue.length === 0 && afterValue.length !== 0) {
+                            retval.push({ path: relativePath, beforeValue, afterValue });
+                        } else {
+                            retval.push(...generateUpdates(beforeValue, afterValue, relativePath, true));
+                        }
                     } else {
                         retval.push(...generateUpdates(beforeValue, afterValue, relativePath));
                     }

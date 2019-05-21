@@ -179,6 +179,7 @@ describe('generateDeltaUpdate', () => {
         expect(result.ConditionExpression).toBe('attribute_not_exists(#arrayString[2])');
         expect(result.ExpressionAttributeValues[':0']).toBe(after.arrayString[2]);
         expect(result.ExpressionAttributeValues[':0Old']).toBeUndefined();
+        expect(result.ExpressionAttributeNames['#arrayString[2]']).toBeUndefined();
     });
 
     test('Array value deleted', () => {
