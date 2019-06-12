@@ -19,6 +19,10 @@ export function generateDeltaTransaction<T>(tableName: string, key: any, before:
     } as DynamoDB.DocumentClient.TransactWriteItem;
 }
 
+function cleanExtraCharacters(path: string) {
+    return path.replace(/\-/g, 'dash');
+}
+
 export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, after: T): 
     DynamoDB.DocumentClient.UpdateItemInput {
     const updates = generateUpdates(before, after);
@@ -42,17 +46,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
                 removeExpression += ', ';
             }
 
-            removeExpression += path;
-        } else if(!update.beforeValue && update.afterValue) {
-            //
-            // Add to set expressions
-            //
-            if(addExpression.length !== 0) {
-                addExpression += ', ';
-            }
-    
-            addExpression += `${path} = :${i}`;
-            expressionValues[':' + i] = update.afterValue;
+            removeExpression += cleanExtraCharacters(path);
         } else {
             //
             // Add to set expressions
@@ -61,7 +55,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
                 setExpression += ', ';
             }
     
-            setExpression += `${path} = :${i}`;
+            setExpression += `${cleanExtraCharacters(path)} = :${i}`;
             expressionValues[':' + i] = update.afterValue;
         }
 
@@ -72,10 +66,10 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             conditionExpression += ' AND ';
         }
         if(update.beforeValue !== undefined) {
-            conditionExpression += `${path} = :${i}Old`;
+            conditionExpression += `${cleanExtraCharacters(path)} = :${i}Old`;
             expressionValues[`:${i}Old`] = update.beforeValue;
         } else {
-            conditionExpression += `attribute_not_exists(${path})`;
+            conditionExpression += `attribute_not_exists(${cleanExtraCharacters(path)})`;
         }
 
         //
@@ -84,7 +78,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
         update.path.split('.').forEach(part => {
             const arrayIndex = part.indexOf('[');
             const subPart = (arrayIndex < 0)? part : part.substr(0, arrayIndex);
-            expressionNames['#' + subPart] = subPart;
+            expressionNames['#' + cleanExtraCharacters(subPart)] = subPart;
         });
     }
 
