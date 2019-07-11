@@ -16,17 +16,18 @@
         "package": "npx tsc -d"
     },
     "dependencies": {
-        "aws-sdk": "^2.474.0"
+        "aws-sdk": "^2.492.0"
     },
     "devDependencies": {
-        "@types/jest": "^24.0.13",
-        "@types/node": "^10.14.9",
+        "@types/jest": "^24.0.15",
+        "@types/node": "^10.14.12",
         "jest": "23.6.0",
         "jest-junit": "^6.4.0",
         "ts-jest": "^23.10.5",
         "ts-loader": "^5.4.5",
-        "tslint": "^5.17.0",
-        "typescript": "^3.5.1"
+        "istanbul-reports": "^2.2.6",
+        "tslint": "^5.18.0",
+        "typescript": "^3.5.3"
     },
     "files": [
         "/dist",
