@@ -28,7 +28,6 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     const updates = generateUpdates(before, after);
 
     let setExpression = '';
-    let addExpression = '';
     let removeExpression = '';
     let conditionExpression = '';
     const expressionValues = {};
@@ -36,6 +35,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     for(let i = 0; i < updates.length; i++) {
         const update = updates[i];
         const path = `#${update.path.split('.').join('.#')}`;
+        let attributeShouldExist = false;
 
         
         if(update.afterValue === null || update.afterValue === undefined) {
@@ -47,6 +47,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             }
 
             removeExpression += cleanExtraCharacters(path);
+            attributeShouldExist = true;
         } else {
             //
             // Add to set expressions
@@ -69,7 +70,13 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             conditionExpression += `${cleanExtraCharacters(path)} = :${i}Old`;
             expressionValues[`:${i}Old`] = update.beforeValue;
         } else {
-            conditionExpression += `attribute_not_exists(${cleanExtraCharacters(path)})`;
+            if(!attributeShouldExist) {
+                conditionExpression += `attribute_not_exists(${cleanExtraCharacters(path)})`;
+            } else {
+                if(!attributeShouldExist) {
+                    conditionExpression += `attribute_exists(${cleanExtraCharacters(path)})`;
+                }
+            }
         }
 
         //
@@ -85,12 +92,6 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     let updateExpression = '';
     if(setExpression.length > 0) {
         updateExpression = 'set ' + setExpression;
-    }
-    if(addExpression.length > 0) {
-        if(updateExpression.length > 0) {
-            updateExpression += ' ';
-        }
-        updateExpression = 'add ' + addExpression;
     }
     if(removeExpression.length > 0) {
         if(updateExpression.length > 0) {
@@ -112,6 +113,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
         if(Object.keys(expressionValues).length === 0) {
             delete retval.ExpressionAttributeValues;
         }
+
         return retval;
     }
     return null;
@@ -133,7 +135,7 @@ function generateUpdates<T>(before: T, after: T, path: string = '', isArray: boo
     for(const i in fields) {
         const field = fields[i];
         const afterValue = after[field];
-        let beforeValue = before[field];
+        const beforeValue = before[field];
 
         if(afterValue === null && beforeValue === null) {
             // Do nothing, they match
@@ -159,7 +161,10 @@ function generateUpdates<T>(before: T, after: T, path: string = '', isArray: boo
                     }
                     break;
                 default:
-                    if(Buffer.isBuffer(afterValue)) {
+                    if (['string', 'boolean', 'number'].includes(typeof beforeValue)
+                        && typeof afterValue === 'object' && !(afterValue instanceof Date)) {
+                        retval.push({ path: relativePath, beforeValue, afterValue });
+                    } else if(Buffer.isBuffer(afterValue)) {
                         if(Buffer.compare(afterValue, beforeValue) !== 0) {
                             retval.push({ path: relativePath, beforeValue, afterValue });
                         }
