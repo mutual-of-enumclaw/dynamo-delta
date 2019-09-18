@@ -101,7 +101,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     }
 
     if(updateExpression) {
-        return {
+        const retval = {
             TableName: tableName,
             Key: key,
             UpdateExpression: updateExpression,
@@ -109,6 +109,10 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             ExpressionAttributeValues: expressionValues,
             ExpressionAttributeNames: expressionNames
         } as DynamoDB.DocumentClient.UpdateItemInput;
+        if(Object.keys(expressionValues).length === 0) {
+            delete retval.ExpressionAttributeValues;
+        }
+        return retval;
     }
     return null;
 }
