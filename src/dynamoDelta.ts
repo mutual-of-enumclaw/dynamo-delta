@@ -73,9 +73,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             if(!attributeShouldExist) {
                 conditionExpression += `attribute_not_exists(${cleanExtraCharacters(path)})`;
             } else {
-                if(!attributeShouldExist) {
-                    conditionExpression += `attribute_exists(${cleanExtraCharacters(path)})`;
-                }
+                conditionExpression += `attribute_exists(${cleanExtraCharacters(path)})`;
             }
         }
 
