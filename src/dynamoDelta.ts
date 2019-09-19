@@ -35,8 +35,6 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
     for(let i = 0; i < updates.length; i++) {
         const update = updates[i];
         const path = `#${update.path.split('.').join('.#')}`;
-        let attributeShouldExist = false;
-
         
         if(update.afterValue === null || update.afterValue === undefined) {
             //
@@ -47,7 +45,6 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             }
 
             removeExpression += cleanExtraCharacters(path);
-            attributeShouldExist = true;
         } else {
             //
             // Add to set expressions
@@ -70,11 +67,7 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             conditionExpression += `${cleanExtraCharacters(path)} = :${i}Old`;
             expressionValues[`:${i}Old`] = update.beforeValue;
         } else {
-            if(!attributeShouldExist) {
-                conditionExpression += `attribute_not_exists(${cleanExtraCharacters(path)})`;
-            } else {
-                conditionExpression += `attribute_exists(${cleanExtraCharacters(path)})`;
-            }
+            conditionExpression += `attribute_not_exists(${cleanExtraCharacters(path)})`;
         }
 
         //

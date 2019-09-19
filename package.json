@@ -1,7 +1,7 @@
 {
     "name": "@moe-tech/dynamo-delta",
     "description": "Provides the ability to perform field level updates based on an original and modified object to dynamodb",
-    "version": "1.0.15",
+    "version": "1.0.18",
     "author": "Mutual of Enumclaw",
     "license": "MIT License",
     "main": "dist/src/index.js",
