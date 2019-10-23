@@ -274,6 +274,32 @@ describe('generateDeltaUpdate', () => {
         expect(result.UpdateExpression).toBe('remove #testdashval');
         expect(result.ExpressionAttributeNames['#testdashval']).toBe('test-val');
     });
+
+    test('forDynamo - Number has difference', () => {
+        const after = generateTestData();
+        after.number = 2;
+        const before = generateTestData();
+        const result = generateDeltaUpdate('test', { Key: 'test'}, before , after, false);
+        expect(result.UpdateExpression).toBe('set #number = :0');
+        expect(result.ConditionExpression).toBe('#number = :0Old');
+        expect(result.ExpressionAttributeValues[':0']).toMatchObject({"N": "2"});
+        expect(result.ExpressionAttributeValues[':0Old']).toMatchObject({"N": "1"});
+
+        expect(result.Key).toMatchObject({ "Key": {"S": "test"}});
+    });
+
+    test('forDynamo - String has difference', () => {
+        const after = generateTestData();
+        after.string = 'This is a new string';
+        const before = generateTestData();
+        const result = generateDeltaUpdate('test', { Key: 'test'}, before , after, false);
+        expect(result.UpdateExpression).toBe('set #string = :0');
+        expect(result.ConditionExpression).toBe('#string = :0Old');
+        expect(result.ExpressionAttributeValues[':0']).toMatchObject({"S": after.string});
+        expect(result.ExpressionAttributeValues[':0Old']).toMatchObject({"S": before.string});
+
+        expect(result.Key).toMatchObject({ "Key": {"S": "test"}});
+    });
 });
 
 function generateTestData() : any {

@@ -6,14 +6,18 @@ interface Update {
     afterValue: any;
 }
 
-export function generateDeltaTransaction<T>(tableName: string, key: any, before: T, after: T):
+export function generateDeltaTransaction<T>(tableName: string, 
+                                            key: any, 
+                                            before: T, 
+                                            after: T, 
+                                            forDocumentClient: boolean = true):
     DynamoDB.DocumentClient.TransactWriteItem {
-    const update = generateDeltaUpdate(tableName, key, before, after);
+    const update = generateDeltaUpdate(tableName, key, before, after, forDocumentClient);
 
     if(!update) {
          return null;
     }
-    
+ 
     return {
         Update: update
     } as DynamoDB.DocumentClient.TransactWriteItem;
@@ -23,7 +27,11 @@ function cleanExtraCharacters(path: string) {
     return path.replace(/\-/g, 'dash');
 }
 
-export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, after: T): 
+export function generateDeltaUpdate<T>(tableName: string, 
+                                       key: any, 
+                                       before: T, 
+                                       after: T, 
+                                       forDocumentClient: boolean = true): 
     DynamoDB.DocumentClient.UpdateItemInput {
     const updates = generateUpdates(before, after);
 
@@ -105,6 +113,11 @@ export function generateDeltaUpdate<T>(tableName: string, key: any, before: T, a
             delete retval.ExpressionAttributeValues;
         }
 
+        if(!forDocumentClient) {
+            retval.Key = DynamoDB.Converter.marshall(retval.Key);
+            retval.ExpressionAttributeValues = DynamoDB.Converter.marshall(retval.ExpressionAttributeValues);
+        }
+
         return retval;
     }
     return null;
@@ -128,7 +141,8 @@ function generateUpdates<T>(before: T, after: T, path: string = '', isArray: boo
         const afterValue = after[field];
         const beforeValue = before[field];
 
-        if(afterValue === null && beforeValue === null) {
+        if((afterValue === null && beforeValue === null) ||
+           (afterValue === undefined && beforeValue === undefined)) {
             // Do nothing, they match
         } else if(afterValue === null || beforeValue === null) {
             let relativePath = ((path)? path + '.' + field : field);
