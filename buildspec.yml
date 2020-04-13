@@ -16,4 +16,5 @@ phases:
   build:
     commands:
       - npm run test
+      - npm run package
       - npm publish --access public
