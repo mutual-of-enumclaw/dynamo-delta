@@ -5,16 +5,12 @@ phases:
     runtime-version:
       nodejs: 12
     commands:
-      - npm install -g typescript
-      - npm install -g jest
-    finally:
-      - echo Install Complete
   pre_build:
     commands:
-      - aws s3 cp $S3HomePath ~ --recursive
+      - if [ "$Validate" != "true" ]; then aws s3 cp $S3HomePath ~ --recursive; fi
       - npm ci
   build:
     commands:
       - npm run test
-      - npm run package
-      - npm publish --access public
+      - if [ "$Validate" != "true" ]; then npm publish --access public; fi
+      
