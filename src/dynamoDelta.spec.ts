@@ -300,6 +300,20 @@ describe('generateDeltaUpdate', () => {
 
         expect(result.Key).toMatchObject({ "Key": {"S": "test"}});
     });
+
+    test('forDynamo - Convert from string to buffer has difference', () => {
+        const after = generateTestData();
+        after.string = new Buffer('This is a new string');
+        const before = generateTestData();
+        before.string = 'This is a string';
+        const result = generateDeltaUpdate('test', { Key: 'test'}, before , after, false);
+        expect(result.UpdateExpression).toBe('set #string = :0');
+        expect(result.ConditionExpression).toBe('#string = :0Old');
+        expect(result.ExpressionAttributeValues[':0']).toMatchObject({"B": after.string});
+        expect(result.ExpressionAttributeValues[':0Old']).toMatchObject({"S": before.string});
+
+        expect(result.Key).toMatchObject({ "Key": {"S": "test"}});
+    });
 });
 
 function generateTestData() : any {
