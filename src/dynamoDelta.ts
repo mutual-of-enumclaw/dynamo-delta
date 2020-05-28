@@ -170,7 +170,7 @@ function generateUpdates<T>(before: T, after: T, path: string = '', isArray: boo
                         && typeof afterValue === 'object' && !(afterValue instanceof Date)) {
                         retval.push({ path: relativePath, beforeValue, afterValue });
                     } else if(Buffer.isBuffer(afterValue)) {
-                        if(Buffer.compare(afterValue, beforeValue) !== 0) {
+                        if(!Buffer.isBuffer(beforeValue) || Buffer.compare(afterValue, beforeValue) !== 0) {
                             retval.push({ path: relativePath, beforeValue, afterValue });
                         }
                     }
