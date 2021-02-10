@@ -33,6 +33,7 @@ export function generateDeltaUpdate<T>(tableName: string,
                                        after: T, 
                                        forDocumentClient: boolean = true): 
     DynamoDB.DocumentClient.UpdateItemInput {
+        
     const updates = generateUpdates(before, after);
 
     let setExpression = '';
